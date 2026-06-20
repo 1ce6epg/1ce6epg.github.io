@@ -457,12 +457,17 @@ const PROFILE = {
   username: "1ce6epg",
   githubToken: "", 
   bioTitle: "Full-Stack Web & Windows Desktop Developer | C++ / C# / Python Enthusiast",
-  bioText: "I am a passionate software developer bridging the gap between web and desktop applications. I specialize in building robust, scalable web applications using ASP.NET Core, and crafting high-performance native Windows software using C++, C#, and Python. I value clean, maintainable code, performance optimization, and continuous learning. In my free time, I explore new technologies, work on side projects, or contribute to open source.",
+  bioText: "I am a passionate software developer bridging the gap between web and desktop applications. I specialize in building robust, scalable web apps using ASP.NET Core, React, Vue.js, and Next.js, alongside crafting high-performance native Windows software using C++, C#, and Python. I value clean, maintainable code, performance optimization, and continuous learning. In my free time, I explore new technologies, work on side projects, or contribute to open source.",
   skills: [
-    "C++", "JAVASCRIPT", "TYPESCRIPT", "HTML5", "CSS3", "SQL", "PYTHON",
-    "ASP.NET CORE", ".NET", "WPF", "WINFORMS", "REACT", "ENTITY FRAMEWORK", 
-    "GIT", "GITHUB", "VISUAL STUDIO", "DOCKER", "WINDOWS", "LINUX", 
-    "SQL SERVER", "SQLITE", "POSTGRESQL"
+    "C++", "C#", "PYTHON", "JAVASCRIPT", "TYPESCRIPT", "HTML5", "CSS3",
+    "VUE.JS", "NUXT.JS", "REACT", "NEXT.JS", 
+    "LESS", "SASS", "STYLUS", "TAILWINDCSS", "UNOCSS", "WINDICSS",
+    "WEBPACK", "ROLLUP", "VITE", "ESLINT", "PRETTIER", 
+    "GIT", "GITHUB", "GITLAB", "VSCODE", "VISUAL STUDIO",
+    "ASP.NET CORE", ".NET", "WPF", "WINFORMS", "ENTITY FRAMEWORK", 
+    "DOCKER", "WINDOWS", "LINUX", 
+    "NETLIFY", "VERCEL", "RAILWAY", "RENDER",
+    "SQL", "SQL SERVER", "SQLITE", "POSTGRESQL"
   ]
 };
 
@@ -582,7 +587,6 @@ async function loadGitHubData() {
     ]);
     
     if (!userRes.ok) {
-      // Если API вернуло ошибку, читаем сообщение от GitHub
       const errData = await userRes.json().catch(() => ({}));
       throw new Error(errData.message || `HTTP ${userRes.status}`);
     }
@@ -647,7 +651,6 @@ async function loadGitHubData() {
   }
 }
 
-// === CURSOR GLOW LOGIC ===
 const cursorGlow = document.getElementById('cursor-glow');
 let mouseX = 0, mouseY = 0, glowX = 0, glowY = 0;
 
@@ -683,30 +686,36 @@ window.addEventListener('resize', () => {
 resizeBg();
 
 const codeSnippets = [
+  // Backend / Desktop
   `const app = builder.Build();`,
   `app.MapControllerRoute("default", "{controller=Home}");`,
   `<Button Content="Click Me" Click="Btn_Click" />`,
   `await context.SaveChangesAsync();`,
   `std::cout << "System initialized" << std::endl;`,
-  `dotnet watch run`,
-  `docker-compose up -d --build`,
-  `git commit -m "feat: add python"`,
-  `const [count, setCount] = useState(0);`,
   `using System.Threading.Tasks;`,
   `public class Profile : IdentityDbContext<User>`,
   `#include <iostream>`,
-  `const router = express.Router();`,
   `string connString = "Server=.;Database=AppDb;";`,
   `[HttpPost] public IActionResult Create([FromBody] Dto data)`,
   `var services = new ServiceCollection();`,
-  `SELECT id, name FROM Products ORDER BY price DESC;`,
-  `import React, { useState, useEffect } from 'react';`,
   `foreach (var item in collection) { ... }`,
   `public static void Main(string[] args) { ... }`,
   `std::vector<int> vec = {1, 2, 3, 4};`,
   `<TextBox Text="{Binding Username, Mode=TwoWay}" />`,
   `app.UseRouting(); app.UseAuthentication();`,
-  `CREATE TABLE Logs (Id INT PRIMARY KEY, Msg TEXT);`,
+
+  `import React, { useState, useEffect } from 'react';`,
+  `const [count, setCount] = useState(0);`,
+  `const Component = React.memo(() => ...)`,
+  `import { createApp } from 'vue';`,
+  `const router = useRouter();`,
+  `export default defineNuxtConfig({ ... })`,
+  `const { useRouter } = next/router;`,
+  `npm i -D tailwindcss unocss`,
+  `@import 'variables.scss';`,
+  `const styles = styled.div\`\``,
+  `export const useFetch = () => ...`,
+
   `import pandas as pd`,
   `def main(): pass`,
   `print(f"Hello {name}")`,
@@ -717,7 +726,18 @@ const codeSnippets = [
   `async def fetch_data(session): ...`,
   `df.groupby('category').sum()`,
   `with open('file.txt', 'r') as f:`,
-  `import numpy as np`
+  `import numpy as np`,
+
+  `const router = express.Router();`,
+  `SELECT id, name FROM Products ORDER BY price DESC;`,
+  `CREATE TABLE Logs (Id INT PRIMARY KEY, Msg TEXT);`,
+  `import { defineConfig } from 'vite'`,
+  `npx create-next-app@latest`,
+  `dotnet watch run`,
+  `docker-compose up -d --build`,
+  `git commit -m "feat: add python"`,
+  `deploy: vercel --prod`,
+  `npm run dev`
 ];
 
 class CodeLine {
