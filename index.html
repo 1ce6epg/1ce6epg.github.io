@@ -455,10 +455,11 @@ section:first-of-type { border-top: none; padding-top: 8px; }
 const PROFILE = {
   name: "Maksim",
   username: "1ce6epg",
-  bioTitle: "Full-Stack Web & Windows Desktop Developer | C++ / C# Enthusiast",
-  bioText: "I am a passionate software developer bridging the gap between web and desktop applications. I specialize in building robust, scalable web applications using ASP.NET Core, and crafting high-performance native Windows software using C++ and C#. I value clean, maintainable code, performance optimization, and continuous learning. In my free time, I explore new technologies, work on side projects, or contribute to open source.",
+  githubToken: "", 
+  bioTitle: "Full-Stack Web & Windows Desktop Developer | C++ / C# / Python Enthusiast",
+  bioText: "I am a passionate software developer bridging the gap between web and desktop applications. I specialize in building robust, scalable web applications using ASP.NET Core, and crafting high-performance native Windows software using C++, C#, and Python. I value clean, maintainable code, performance optimization, and continuous learning. In my free time, I explore new technologies, work on side projects, or contribute to open source.",
   skills: [
-    "C++", "JAVASCRIPT", "TYPESCRIPT", "HTML5", "CSS3", "SQL", 
+    "C++", "JAVASCRIPT", "TYPESCRIPT", "HTML5", "CSS3", "SQL", "PYTHON",
     "ASP.NET CORE", ".NET", "WPF", "WINFORMS", "REACT", "ENTITY FRAMEWORK", 
     "GIT", "GITHUB", "VISUAL STUDIO", "DOCKER", "WINDOWS", "LINUX", 
     "SQL SERVER", "SQLITE", "POSTGRESQL"
@@ -492,7 +493,7 @@ cardContent.innerHTML = `
   <section class="header reveal" style="border-top: none;">
     <div class="avatar-wrap">
       <div class="avatar-ring"></div>
-      <img class="avatar" id="avatar" src="" alt="${esc(PROFILE.name)}">
+      <img class="avatar" id="avatar" src="https://github.com/${esc(PROFILE.username)}.png" alt="${esc(PROFILE.name)}">
     </div>
     <h1 class="name" id="name">${esc(PROFILE.name)}</h1>
     <div class="username">@${esc(PROFILE.username)}</div>
@@ -568,19 +569,27 @@ function animateNumber(el, target, duration = 1200) {
 async function loadGitHubData() {
   const userUrl = `https://api.github.com/users/${PROFILE.username}`;
   const reposUrl = `https://api.github.com/users/${PROFILE.username}/repos?per_page=100&sort=updated`;
+  
+  const headers = {};
+  if (PROFILE.githubToken) {
+    headers.Authorization = `Bearer ${PROFILE.githubToken}`;
+  }
 
   try {
     const [userRes, reposRes] = await Promise.all([
-      fetch(userUrl, { headers: { 'Accept': 'application/vnd.github+json' } }),
-      fetch(reposUrl, { headers: { 'Accept': 'application/vnd.github+json' } })
+      fetch(userUrl, { headers }),
+      fetch(reposUrl, { headers })
     ]);
     
-    if (!userRes.ok) throw new Error('GitHub API limit or user not found');
+    if (!userRes.ok) {
+      // Если API вернуло ошибку, читаем сообщение от GitHub
+      const errData = await userRes.json().catch(() => ({}));
+      throw new Error(errData.message || `HTTP ${userRes.status}`);
+    }
     
     const user = await userRes.json();
     const repos = reposRes.ok ? await reposRes.json() : [];
 
-    document.getElementById('avatar').src = user.avatar_url;
     document.getElementById('name').textContent = user.name || PROFILE.name;
     
     if (user.blog) {
@@ -599,18 +608,12 @@ async function loadGitHubData() {
 
     let totalStars = 0;
     repos.forEach(r => {
-      if (!r.fork) {
-        totalStars += r.stargazers_count;
-      }
+      if (!r.fork) totalStars += r.stargazers_count;
     });
 
     animateNumber(document.getElementById('statStars'), totalStars);
 
-    const topRepos = repos
-      .filter(r => !r.fork)
-      .sort((a, b) => b.stargazers_count - a.stargazers_count)
-      .slice(0, 3);
-
+    const topRepos = repos.filter(r => !r.fork).sort((a, b) => b.stargazers_count - a.stargazers_count).slice(0, 3);
     const reposContainer = document.getElementById('reposContainer');
     
     if (topRepos.length > 0) {
@@ -633,19 +636,20 @@ async function loadGitHubData() {
     } else {
       reposContainer.innerHTML = `<div style="text-align: center; color: var(--muted-2); font-size: 12px; padding: 20px 0; font-family: 'JetBrains Mono', monospace;">No public repositories yet.</div>`;
     }
-
   } catch (error) {
-    console.error('GitHub Fetch Error:', error);
-    document.getElementById('statRepos').textContent = 'N/A';
-    document.getElementById('statFollowers').textContent = 'N/A';
-    document.getElementById('statStars').textContent = 'N/A';
-    document.getElementById('reposContainer').innerHTML = `<div style="text-align: center; color: var(--muted-2); font-size: 12px; padding: 20px 0; font-family: 'JetBrains Mono', monospace;">Failed to load (API limit or CORS).</div>`;
+    console.error('GitHub Fetch Error:', error.message);
+    const errBox = document.getElementById('reposContainer');
+    if (error.message.includes("Failed to fetch")) {
+      errBox.innerHTML = `<div style="text-align: center; color: var(--muted-2); font-size: 12px; padding: 20px 0; font-family: 'JetBrains Mono', monospace;">Blocked by browser (CORS or AdBlock).<br>Upload to GitHub Pages to fix.</div>`;
+    } else {
+      errBox.innerHTML = `<div style="text-align: center; color: var(--muted-2); font-size: 12px; padding: 20px 0; font-family: 'JetBrains Mono', monospace;">Error: ${error.message}</div>`;
+    }
   }
 }
 
+// === CURSOR GLOW LOGIC ===
 const cursorGlow = document.getElementById('cursor-glow');
-let mouseX = 0, mouseY = 0;
-let glowX = 0, glowY = 0;
+let mouseX = 0, mouseY = 0, glowX = 0, glowY = 0;
 
 if (window.matchMedia("(pointer: fine)").matches) {
   document.addEventListener('mousemove', (e) => {
@@ -653,11 +657,7 @@ if (window.matchMedia("(pointer: fine)").matches) {
     mouseY = e.clientY;
     cursorGlow.style.opacity = '1';
   });
-
-  document.addEventListener('mouseleave', () => {
-    cursorGlow.style.opacity = '0';
-  });
-
+  document.addEventListener('mouseleave', () => cursorGlow.style.opacity = '0');
   function animateGlow() {
     glowX += (mouseX - glowX) * 0.1;
     glowY += (mouseY - glowY) * 0.1;
@@ -668,48 +668,56 @@ if (window.matchMedia("(pointer: fine)").matches) {
   animateGlow();
 }
 
-const canvas = document.getElementById('code-bg');
-const ctx = canvas.getContext('2d');
-let width, height;
+const bgCanvas = document.getElementById('code-bg');
+const bgCtx = bgCanvas.getContext('2d');
+let bgWidth, bgHeight;
 
-function resize() {
-  width = canvas.width = window.innerWidth;
-  height = canvas.height = window.innerHeight;
+function resizeBg() {
+  bgWidth = bgCanvas.width = window.innerWidth;
+  bgHeight = bgCanvas.height = window.innerHeight;
 }
-window.addEventListener('resize', resize);
-resize();
+window.addEventListener('resize', () => {
+  resizeBg();
+  initLines();
+});
+resizeBg();
 
 const codeSnippets = [
   `const app = builder.Build();`,
   `app.MapControllerRoute("default", "{controller=Home}");`,
   `<Button Content="Click Me" Click="Btn_Click" />`,
   `await context.SaveChangesAsync();`,
-  `SELECT * FROM Users WHERE active = 1;`,
   `std::cout << "System initialized" << std::endl;`,
   `dotnet watch run`,
   `docker-compose up -d --build`,
-  `git commit -m "fix: state update"`,
+  `git commit -m "feat: add python"`,
   `const [count, setCount] = useState(0);`,
   `using System.Threading.Tasks;`,
-  `npm install --save react-router-dom`,
   `public class Profile : IdentityDbContext<User>`,
   `#include <iostream>`,
   `const router = express.Router();`,
   `string connString = "Server=.;Database=AppDb;";`,
   `[HttpPost] public IActionResult Create([FromBody] Dto data)`,
   `var services = new ServiceCollection();`,
-  `sudo apt-get update && sudo apt-get upgrade`,
-  `if (ModelState.IsValid) { return View(model); }`,
   `SELECT id, name FROM Products ORDER BY price DESC;`,
   `import React, { useState, useEffect } from 'react';`,
   `foreach (var item in collection) { ... }`,
-  `const fetchData = async () => { await fetch(url); }`,
   `public static void Main(string[] args) { ... }`,
   `std::vector<int> vec = {1, 2, 3, 4};`,
   `<TextBox Text="{Binding Username, Mode=TwoWay}" />`,
   `app.UseRouting(); app.UseAuthentication();`,
   `CREATE TABLE Logs (Id INT PRIMARY KEY, Msg TEXT);`,
-  `const [user, setUser] = useState(null);`
+  `import pandas as pd`,
+  `def main(): pass`,
+  `print(f"Hello {name}")`,
+  `if __name__ == "__main__":`,
+  `pip install -r requirements.txt`,
+  `[x**2 for x in range(10)]`,
+  `@app.route('/api/data')`,
+  `async def fetch_data(session): ...`,
+  `df.groupby('category').sum()`,
+  `with open('file.txt', 'r') as f:`,
+  `import numpy as np`
 ];
 
 class CodeLine {
@@ -721,9 +729,16 @@ class CodeLine {
     this.state = "typing";
     this.charIndex = 0;
     this.timer = 0;
-    this.speed = 50 + Math.random() * 80;
-    this.color = Math.random() > 0.85 ? 'rgba(255, 255, 255, 0.35)' : 'rgba(255, 122, 0, 0.3)';
+    this.speed = 40 + Math.random() * 60;
+    this.color = Math.random() > 0.8 ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 122, 0, 0.25)';
+    
+    bgCtx.font = '12px JetBrains Mono, monospace';
+    this.boundW = bgCtx.measureText(this.target).width + 20;
+    this.boundH = 20;
+    this.bx = x;
+    this.by = y - 15;
   }
+  
   update(dt) {
     this.timer += dt;
     if (this.state === "typing") {
@@ -738,9 +753,7 @@ class CodeLine {
       }
     } else if (this.state === "pausing") {
       this.pauseTimer -= dt;
-      if (this.pauseTimer <= 0) {
-        this.state = "erasing";
-      }
+      if (this.pauseTimer <= 0) this.state = "erasing";
     } else if (this.state === "erasing") {
       if (this.timer > 20) {
         this.timer = 0;
@@ -749,11 +762,14 @@ class CodeLine {
         if (this.charIndex <= 0) {
           this.state = "typing";
           this.target = codeSnippets[Math.floor(Math.random() * codeSnippets.length)];
-          this.color = Math.random() > 0.85 ? 'rgba(255, 255, 255, 0.35)' : 'rgba(255, 122, 0, 0.3)';
+          bgCtx.font = '12px JetBrains Mono, monospace';
+          this.boundW = bgCtx.measureText(this.target).width + 20;
+          this.color = Math.random() > 0.8 ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 122, 0, 0.25)';
         }
       }
     }
   }
+  
   draw(ctx) {
     ctx.fillStyle = this.color;
     ctx.font = '12px JetBrains Mono, monospace';
@@ -762,41 +778,53 @@ class CodeLine {
 }
 
 const lines = [];
-const lineHeight = 24; 
-const colWidth = 450;
 
 function initLines() {
   lines.length = 0;
-  const cols = Math.ceil(width / colWidth);
-  const rows = Math.ceil(height / lineHeight);
+  const targetCount = Math.floor((bgWidth * bgHeight) / 60000);
+  const maxAttempts = 50;
   
-  for (let i = 0; i < cols; i++) {
-    for (let j = 0; j < rows; j++) {
-      if (Math.random() > 0.8) {
-        const x = i * colWidth + 15;
-        const y = j * lineHeight + 15;
+  for (let i = 0; i < targetCount; i++) {
+    let placed = false;
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const w = 350;
+      const h = 20;
+      const x = Math.random() * (bgWidth - w - 20) + 10;
+      const y = Math.random() * (bgHeight - h - 20) + 20;
+      
+      let overlaps = false;
+      for (const line of lines) {
+        if (x < line.bx + line.boundW &&
+            x + w > line.bx &&
+            y - 15 < line.by + line.boundH &&
+            y + 5 > line.by) {
+          overlaps = true;
+          break;
+        }
+      }
+      
+      if (!overlaps) {
         const line = new CodeLine(x, y);
-        line.timer = -Math.random() * 4000;
         lines.push(line);
+        placed = true;
+        break;
       }
     }
+    if (!placed) break;
   }
 }
 initLines();
-window.addEventListener('resize', initLines);
 
 let lastTime = performance.now();
 function loop(now) {
   const dt = now - lastTime;
   lastTime = now;
   
-  ctx.clearRect(0, 0, width, height);
-  
+  bgCtx.clearRect(0, 0, bgWidth, bgHeight);
   lines.forEach(line => {
     line.update(dt);
-    line.draw(ctx);
+    line.draw(bgCtx);
   });
-  
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
